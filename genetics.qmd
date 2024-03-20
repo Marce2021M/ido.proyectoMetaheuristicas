@@ -20,7 +20,7 @@ tsp_dataDJ38 = read_tsp("zi929.tsp")
 
 
 ```{julia}
-include("genetics2.jl")
+include("genetic.jl")
 # Parámetros del algoritmo
 population_size = 10
 generations = 20
