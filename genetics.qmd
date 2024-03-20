@@ -1,0 +1,32 @@
+---
+title: "Clase Modelado 1"
+lang: es
+date: today
+format:
+  pdf:
+    latex_engine: xelatex
+nocite: |
+  @*
+---
+
+```{julia}
+include("paquetes.jl")
+# Uso de la función
+filename = "dj38.tsp"
+tsp_dataDJ38 = read_tsp(filename)
+
+```
+
+
+```{julia}
+include("genetic.jl")
+# Parámetros del algoritmo
+population_size = 100
+generations = 10000
+coordinates_matrix = transpose(hcat(tsp_dataDJ38...))
+# Ejecutar algoritmo genético
+best_solution, distance = genetic_algorithm(coordinates_matrix[:, 2:end], population_size, generations)
+
+println("Mejor solución: $best_solution")
+println("Distancia total: $distance")
+```
