@@ -14,19 +14,236 @@ include("paquetes.jl")
 # Uso de la función
 filename = "dj38.tsp"
 tsp_dataDJ38 = read_tsp(filename)
+tsp_dataDJ38 = read_tsp("zi929.tsp")
 
 ```
 
 
 ```{julia}
-include("genetic.jl")
+include("genetics2.jl")
 # Parámetros del algoritmo
-population_size = 100
-generations = 10000
+population_size = 10
+generations = 20
 coordinates_matrix = transpose(hcat(tsp_dataDJ38...))
 # Ejecutar algoritmo genético
 best_solution, distance = genetic_algorithm(coordinates_matrix[:, 2:end], population_size, generations)
 
 println("Mejor solución: $best_solution")
 println("Distancia total: $distance")
+```
+
+
+
+
+# Probar este frankeinstein
+
+```{julia}
+#CHECAR
+using Distributions
+using StatsBase  # Para la función sample
+
+function levy_flights(λ, size)
+    distribution = Levy(0, 1)  # location=0, scale=1
+    return rand(distribution, size)
+end
+
+function cuckoo_search_step!(population, distances, nest_probability)
+    n = length(population[1])
+    new_population = deepcopy(population)
+    
+    for i in 1:length(population)
+        step_size = levy_flights(1.5, n)
+        # Asegúrate de que los índices son enteros
+        int_step = round.(Int, step_size)  # Convierte step_size a enteros
+        new_solution = mod.(population[i] .+ int_step, n) .+ 1
+        
+        # Asegúrate de que new_solution sea una permutación válida si es necesario
+        new_solution = two_opt(new_solution, distances)[1]
+
+        if fitness(new_solution, distances) > fitness(population[i], distances)
+            new_population[i] = new_solution
+        end
+    end
+
+    # Abandonar algunos nidos
+    for i in 1:length(population)
+        if rand() < nest_probability
+            new_population[i] = randperm(n)
+        end
+    end
+
+    return new_population
+end
+
+
+
+function genetic_algorithm(coordinates, population_size, generations, nest_probability=.25, elite_threshold=0.1)
+    n = size(coordinates, 1)
+    distances = [norm(coordinates[i, :] - coordinates[j, :]) for i in 1:n, j in 1:n]
+
+    population = [randperm(n) for _ in 1:population_size]
+    best_global_distance = Inf  # Inicialización necesaria
+    best_global_solution = nothing  # Inicialización necesaria
+    some_defined_performance_barrier = 0.1  # Necesitas definir este valor apropiadamente
+
+    for gen in 1:generations
+        fitnesses = [fitness(individual, distances) for individual in population]
+        sorted_indices = sortperm(fitnesses, rev=true)
+        # Preservar la élite
+        elite_count = max(1, round(Int, population_size * elite_threshold))
+        elite_indices = sorted_indices[1:elite_count]
+        elite = population[elite_indices]
+        
+        # Comprobar si se debe aumentar el umbral de élite
+        elite_fitnesses = fitnesses[elite_indices]
+        if percentile(elite_fitnesses, 75) > some_defined_performance_barrier
+            elite_threshold = min(elite_threshold + 0.05, 1.0)  # Aumentar el umbral, hasta un máximo de 1.0
+        end
+         # Selección para cruce y mutación
+        selected_indices = sorted_indices[1:Int(round(population_size * 0.5))]
+        population = population[selected_indices]
+        
+        # Integrar paso de búsqueda de Cuckoo
+        population = cuckoo_search_step!(population, distances, nest_probability)
+
+         # Generar nuevas soluciones
+        new_population = copy(elite)  # Comenzar con la élite
+        while length(new_population) < population_size
+            parents = sample(population, 2, replace=false)
+            child = crossover(parents[1], parents[2])  
+            mutate!(child)  
+            child, child_distance = two_opt(child, distances)  # Mejorar con 2-opt
+            if child_distance < best_global_distance
+                best_global_solution = child
+                best_global_distance = child_distance
+            end
+            push!(new_population, child)
+        end
+        population = new_population
+
+        
+        if gen % 100 == 0
+            println("Generación $gen completada. Mejor distancia: $best_global_distance")
+        end
+    end
+
+    return best_global_solution, best_global_distance
+end
+
+
+```
+
+
+```{julia}
+function genetic_algorithm(coordinates, population_size, generations, elite_threshold=10)
+    n = size(coordinates, 1)
+    distances = [norm(coordinates[i, :] - coordinates[j, :]) for i in 1:n, j in 1:n]
+    
+    population = [randperm(n) for _ in 1:population_size]
+    best_global_solution = []
+    best_global_distance = Inf
+
+    for gen in 1:generations
+        fitnesses = [fitness(individual, distances) for individual in population]
+        sorted_indices = sortperm(fitnesses, rev=true)
+        
+        # Preservar la élite
+        elite_count = max(1, round(Int, population_size * elite_threshold))
+        elite_indices = sorted_indices[1:elite_count]
+        elite = population[elite_indices]
+        
+        # Comprobar si se debe aumentar el umbral de élite
+        elite_fitnesses = fitnesses[elite_indices]
+        if percentile(elite_fitnesses, 75) > some_defined_performance_barrier
+            elite_threshold = min(elite_threshold + 0.05, 1.0)  # Aumentar el umbral, hasta un máximo de 1.0
+        end
+
+        # Selección para cruce y mutación
+        selected_indices = sorted_indices[1:Int(round(population_size * 0.5))]
+        population = population[selected_indices]
+
+        # Generar nuevas soluciones
+        new_population = copy(elite)  # Comenzar con la élite
+        while length(new_population) < population_size
+            parents = sample(population, 2, replace=false)
+            child = crossover(parents[1], parents[2])  
+            mutate!(child)  
+            child, child_distance = two_opt(child, distances)  # Mejorar con 2-opt
+            if child_distance < best_global_distance
+                best_global_solution = child
+                best_global_distance = child_distance
+            end
+            push!(new_population, child)
+        end
+
+        population = new_population
+        println("Generación $gen completada. Mejor distancia: $best_global_distance")
+    end
+
+    return best_global_solution, best_global_distance
+end
+
+```
+
+# Probando los de clase
+
+Si checas en todos casi le atina o le atina al PPL
+
+```{julia}
+using DelimitedFiles
+
+data1 = readdlm("p1.txt", ' ', Float64)
+
+
+data2 = readdlm("p2.txt", ' ', Float64)
+
+data3 = readdlm("p3.txt", ' ', Float64)
+
+data4 = readdlm("p4.txt", ' ', Float64)
+
+data5 = readdlm("p5.txt", ' ', Float64)
+coordinates = data5[:,2:3]
+
+```
+
+```{julia}
+include("genetic.jl")
+# Parámetros del algoritmo
+population_size = 10
+generations = 200
+# Ejecutar algoritmo genético
+best_solution, distance = genetic_algorithm(data5[:, 2:end], population_size, generations)
+
+println("Mejor solución: $best_solution")
+println("Distancia total: $distance")
+
+```
+
+
+```{julia}
+using Plots
+
+function plot_solution(coordinates, solution)
+    # Extraer las coordenadas x e y
+    x_coords = coordinates[:, 1]
+    y_coords = coordinates[:, 2]
+
+    # Construir el recorrido a partir de la solución
+    tour = [solution[1]]  # Comenzar con el primer punto
+    for i in 2:length(solution)
+        push!(tour, solution[i])
+    end
+    push!(tour, solution[1])  # Volver al punto de inicio
+
+    # Crear un gráfico del recorrido
+    p = plot(x_coords[tour], y_coords[tour], marker = :circle, line = (:blue, 1), legend = false)
+    scatter!(p, x_coords, y_coords, color = :red)  # Agregar los puntos
+    return p
+end
+
+
+# Graficar la solución
+plot_solution(data5[:, 2:3], best_solution)
+
+
 ```
