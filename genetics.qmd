@@ -12,9 +12,9 @@ nocite: |
 ```{julia}
 include("paquetes.jl")
 # Uso de la función
-filename = "dj38.tsp"
+filename = "xql662.tsp"
 tsp_dataDJ38 = read_tsp(filename)
-tsp_dataDJ38 = read_tsp("zi929.tsp")
+
 
 ```
 
@@ -22,8 +22,8 @@ tsp_dataDJ38 = read_tsp("zi929.tsp")
 ```{julia}
 include("genetic.jl")
 # Parámetros del algoritmo
-population_size = 10
-generations = 20
+population_size = 15
+generations = 60
 coordinates_matrix = transpose(hcat(tsp_dataDJ38...))
 # Ejecutar algoritmo genético
 best_solution, distance = genetic_algorithm(coordinates_matrix[:, 2:end], population_size, generations)
