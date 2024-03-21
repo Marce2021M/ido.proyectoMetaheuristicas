@@ -25,7 +25,7 @@ function genetic_algorithm(coordinates, population_size, generations)
 
     for gen in 1:generations
         if gen % 100 == 0
-            println("Generación $gen")
+            println("Generación $gen, mejor distancia: $(1/maximum(fitnesses))")
         end
         
         # Seleccionar padres del percentil 25
@@ -54,7 +54,6 @@ function genetic_algorithm(coordinates, population_size, generations)
         population = new_population
         fitnesses = [fitness(individual, distances) for individual in population]
     end
-
     best_index = argmax(fitnesses)
     best_solution = population[best_index]
     return best_solution, total_distance(best_solution, distances)
