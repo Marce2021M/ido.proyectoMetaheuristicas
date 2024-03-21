@@ -12,7 +12,7 @@ nocite: |
 ```{julia}
 include("paquetes.jl")
 # Uso de la función
-filename = "vm22775.tsp"
+filename = "xql662.tsp"
 tsp_dataDJ38 = read_tsp(filename)
 ```
 
@@ -20,8 +20,8 @@ tsp_dataDJ38 = read_tsp(filename)
 ```{julia}
 include("test.jl")
 # Parámetros del algoritmo
-population_size = 200
-generations = 500
+population_size = 300
+generations = 10000
 coordinates_matrix = transpose(hcat(tsp_dataDJ38...))
 # Ejecutar algoritmo genético
 best_solution, distance = genetic_algorithm(coordinates_matrix[:, 2:end], population_size, generations)
@@ -36,9 +36,36 @@ best_solution, distance = cs_tsp(coordinates_matrix[:, 2:end], population_size, 
 
 println("Mejor solución: $best_solution")
 println("Distancia total: $distance")
+
 ```
 
+# Probamos ants
+```{julia}
+using Distances, StatsBase
+include("ants.jl")
+coordinates_matrix = transpose(hcat(tsp_dataDJ38...))
+# Asegúrate de que coordinates_matrix está definida y contiene tus datos
+distance_matrix = pairwise(Euclidean(), coordinates_matrix[:, 2:end]', dims=2)
 
+num_ants = 10
+num_iterations = 50
+
+# Comienza a medir el tiempo
+start_time = time()
+
+# Suponiendo que la función ant_colony_optimization está definida y lista para ser usada
+best_path, best_distance = ant_colony_optimization(distance_matrix, num_ants, num_iterations)
+
+# Finaliza el medir el tiempo
+end_time = time()
+
+# Calcula el tiempo transcurrido
+elapsed_time = end_time - start_time
+
+println("El tiempo transcurrido es $elapsed_time segundos.")
+
+
+```
 
 
 # Probar este frankeinstein
