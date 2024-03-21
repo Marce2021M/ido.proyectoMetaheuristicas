@@ -14,8 +14,8 @@ function fitness(individual, distances)
     total_dist += distances[individual[end], individual[1]]
     return 1 / total_dist
 end
-function levy_flights(λ, size)
-    distribution = Levy(0, 1)  # location=0, scale=1
+function levy_flights(lambda, size)
+    distribution = Levy(lambda, 1)  # location=0, scale=1
     return rand(distribution, size)
 end
 
@@ -68,14 +68,15 @@ end
 
 function genetic_algorithm(coordinates, population_size, generations, nest_probability=.45, elite_threshold=0.1)
     n = size(coordinates, 1)
-    distances = [norm(coordinates[i, :] - coordinates[j, :]) for i in 1:n, j in 1:n]
-
+    distances = pairwise(Euclidean(), coordinates', dims=2)
+    
     population = [randperm(n) for _ in 1:population_size]
     best_global_distance = Inf  # Inicialización necesaria
     best_global_solution = nothing  # Inicialización necesaria
     some_defined_performance_barrier = 0.1  # Necesitas definir este valor apropiadamente
-
+    
     for gen in 1:generations
+        break
         fitnesses = [fitness(individual, distances) for individual in population]
         sorted_indices = sortperm(fitnesses, rev=true)
         # Preservar la élite

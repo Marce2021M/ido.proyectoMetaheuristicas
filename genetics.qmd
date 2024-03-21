@@ -12,7 +12,7 @@ nocite: |
 ```{julia}
 include("paquetes.jl")
 # Uso de la función
-filename = "xql662.tsp"
+filename = "ja9847.tsp"
 tsp_dataDJ38 = read_tsp(filename)
 ```
 

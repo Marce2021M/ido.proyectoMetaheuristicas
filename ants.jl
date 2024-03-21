@@ -12,7 +12,10 @@ function ant_colony_optimization(distance_matrix, num_ants, num_iterations; alph
     best_distance = Inf
 
     for i in 1:num_iterations
-        for _ in 1:num_ants
+        println("Iteración $i")
+        flag = false
+        counter = 0
+        for ant in 1:num_ants
             current_city = rand(1:num_cities)
             visited = falses(num_cities)
             visited[current_city] = true
@@ -20,7 +23,7 @@ function ant_colony_optimization(distance_matrix, num_ants, num_iterations; alph
             total_distance = 0.0
 
             for _ in 1:num_cities - 1
-                probabilities = [(pheromone_matrix[current_city, city] ^ alpha) * ((1 / distance_matrix[current_city, city]) ^ beta) for city in 1:num_cities if !visited[city]]
+                probabilities = [!visited[city] ? (pheromone_matrix[current_city, city] ^ alpha) * ((1 / distance_matrix[current_city, city]) ^ beta) : 0 for city in 1:num_cities]
                 probabilities /= sum(probabilities)
                 next_city = sample(1:num_cities, Weights(probabilities))
 
@@ -36,9 +39,13 @@ function ant_colony_optimization(distance_matrix, num_ants, num_iterations; alph
             if total_distance < best_distance
                 best_distance = total_distance
                 best_path = path
+                println("Mejor distancia: $best_distance")
+                flag = true
             end
         end
-
+        if flag == true
+            i += 1
+        end
         # Adjust the evaporation rate if necessary
         if i >= 20
             evaporation_rate = rand(0.4:0.01:0.7)
@@ -53,9 +60,9 @@ function ant_colony_optimization(distance_matrix, num_ants, num_iterations; alph
 
         # Update pheromones along the best path
         for i in 1:length(best_path)-1
-            x = distance_matrix[best_path[i], best_path[i+1]]
+            x = distance_matrix[best_path[i], best_path[i+1] % num_cities + 1]
             a = exp(-x)
-            pheromone_matrix[best_path[i], best_path[i+1]] += ((50 / best_distance) + a)
+            pheromone_matrix[best_path[i], best_path[i+1]% num_cities + 1] += ((50 / best_distance) + a)
         end
     end
 
