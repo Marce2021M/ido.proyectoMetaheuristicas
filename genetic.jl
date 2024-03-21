@@ -1,5 +1,5 @@
 using Random
-using LinearAlgebra, StatsBase
+using LinearAlgebra, StatsBase, Distances
 
 
 # Función para calcular la distancia total de un recorrido
@@ -18,8 +18,7 @@ fitness(path, distances) = 1 / total_distance(path, distances)
 # Algoritmo genético básico para TSP
 function genetic_algorithm(coordinates, population_size, generations)
     n = size(coordinates, 1)
-    distances = [norm(coordinates[i,:] - coordinates[j,:]) for i in 1:n, j in 1:n]
-
+    distances = pairwise(Euclidean(), coordinates', dims=2)
     # Inicializar población aleatoriamente
     population = [randperm(n) for _ in 1:population_size]
 

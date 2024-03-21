@@ -12,7 +12,7 @@ nocite: |
 ```{julia}
 include("paquetes.jl")
 # Uso de la función
-filename = "ja9847.tsp"
+filename = "vm22775.tsp"
 tsp_dataDJ38 = read_tsp(filename)
 ```
 
@@ -29,6 +29,8 @@ best_solution, distance = genetic_algorithm(coordinates_matrix[:, 2:end], popula
 println("Mejor solución: $best_solution")
 println("Distancia total: $distance")
 ```
+
+
 
 ```{julia}
 include("cuco.jl")

@@ -1,7 +1,7 @@
 #CHECAR
 
 using Distributions, Random
-using StatsBase, LinearAlgebra  # Para la función sample
+using StatsBase, LinearAlgebra, Distances  # Para la función sample
 
 function total_distance(path, distances)
     d = sum(distances[path[i], path[i + 1]] for i in 1:(length(path) - 1))
@@ -76,7 +76,6 @@ function genetic_algorithm(coordinates, population_size, generations, nest_proba
     some_defined_performance_barrier = 0.1  # Necesitas definir este valor apropiadamente
     
     for gen in 1:generations
-        break
         fitnesses = [fitness(individual, distances) for individual in population]
         sorted_indices = sortperm(fitnesses, rev=true)
         # Preservar la élite
@@ -92,9 +91,10 @@ function genetic_algorithm(coordinates, population_size, generations, nest_proba
          # Selección para cruce y mutación
         selected_indices = sorted_indices[1:Int(round(population_size * 0.5))]
         population = population[selected_indices]
-        
+
         # Integrar paso de búsqueda de Cuckoo
         population = cuckoo_search_step!(population, distances, nest_probability)
+        break
          # Generar nuevas soluciones
         new_population = copy(elite)  # Comenzar con la élite
         while length(new_population) < population_size
